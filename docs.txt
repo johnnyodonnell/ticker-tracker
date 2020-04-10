@@ -1,0 +1,4 @@
+How to get NYSE ticker symbols:
+https://quant.stackexchange.com/q/1640/46191
+https://stackoverflow.com/q/25338608/5832619
+
