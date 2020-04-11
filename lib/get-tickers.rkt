@@ -1,9 +1,40 @@
 #lang racket
 
 (require racket/tcp)
+(require csv-reading)
 
+(provide get-tickers)
+
+
+(struct ticker (symbol description exchange))
+
+(define convert-to-exchange
+  (lambda (sym)
+    (case sym
+      [("N") 'nyse]
+      [("Q") 'nasdaq]
+      [else 'other])))
+
+(define make-list-iterator
+  (lambda (lst)
+    (lambda ([num-of-forward-iterations 0])
+      (let loop ([i 0])
+        (let ([popped-value (car lst)])
+          (set! lst (cdr lst))
+          (if (= i num-of-forward-iterations)
+            popped-value
+            (loop (+ i 1))))))))
+
+(define convert-csv-line-to-ticker
+  (lambda (csv-line)
+    (let ([iterator (make-list-iterator csv-line)])
+      (ticker (iterator 1) (iterator) (convert-to-exchange (iterator))))))
 
 (define passive-regex #rx#"\\((.*),(.*),(.*),(.*),(.*),(.*)\\)")
+
+(define ticker-csv-reader-maker
+  (make-csv-reader-maker
+    '((separator-chars #\|))))
 
 (define (bytes->number bytes)
   (string->number (bytes->string/latin-1 bytes)))
@@ -12,13 +43,6 @@
   (lambda (cmd tcpout)
     (fprintf tcpout "~a\r\n" cmd)
     (flush-output tcpout)))
-
-(define read-bytes-to-list
-  (lambda (in)
-    (let ([next-byte (read-byte in)])
-      (if (eof-object? next-byte)
-        '()
-        (cons next-byte (read-bytes-to-list in))))))
 
 (define create-passive-connection
   (lambda (tcpin tcpout)
@@ -43,7 +67,7 @@
       (tcp-abandon-port pasv-out)
       (send-ftp-cmd (format "RETR ~a" filename) tcpout)
       (displayln (read-bytes-line tcpin 'any))
-      (bytes->string/utf-8 (list->bytes (read-bytes-to-list pasv-in))))))
+      pasv-in)))
 
 (define get-tickers
   (lambda ()
@@ -56,8 +80,14 @@
       (send-ftp-cmd "CWD SymbolDirectory" tcpout)
       (displayln (read-bytes-line tcpin 'any))
 
-      (displayln (ftp-download tcpin tcpout "nasdaqtraded.txt"))
-      )))
+      (filter
+        (lambda (ticker)
+          (or (eq? (ticker-exchange ticker) 'nasdaq)
+              (eq? (ticker-exchange ticker) 'nyse)))
+        (csv-map
+          convert-csv-line-to-ticker
+          (ticker-csv-reader-maker
+            (ftp-download tcpin tcpout "nasdaqtraded.txt")))))))
 
 (get-tickers)
 
