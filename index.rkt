@@ -6,6 +6,8 @@
 
 (require "./lib/get-tickers.rkt")
 (require "./lib/tickers-seen.rkt")
+(require "./lib/send-notification.rkt")
+(require "./lib/ticker.rkt")
 
 
 (define handler
@@ -24,12 +26,16 @@
                   (hash-ref tickers-seen (ticker-symbol ticker))
                   'time-last-accessed
                   utc-timestamp)))
-            (set!
-              tickers-seen
-              (hash-set
+            (begin
+              (displayln
+                (format "Found new ticker: ~a" (ticker-symbol ticker)))
+              (notify-new-ticker ticker)
+              (set!
                 tickers-seen
-                (ticker-symbol ticker)
-                (hasheq 'date-created utc-timestamp)))))
+                (hash-set
+                  tickers-seen
+                  (ticker-symbol ticker)
+                  (hasheq 'date-created utc-timestamp))))))
         (get-tickers))
       (update-seen-tickers tickers-seen))))
 

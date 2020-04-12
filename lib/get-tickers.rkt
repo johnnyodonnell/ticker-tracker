@@ -1,13 +1,12 @@
 #lang racket
 
-(provide get-tickers
-         (struct-out ticker))
+(provide get-tickers)
 
 (require racket/tcp)
 (require csv-reading)
 
+(require "./ticker.rkt")
 
-(struct ticker (symbol description exchange))
 
 (define convert-to-exchange
   (lambda (sym)
