@@ -1,9 +1,10 @@
 #lang racket
 
+(provide get-tickers
+         (struct-out ticker))
+
 (require racket/tcp)
 (require csv-reading)
-
-(provide get-tickers)
 
 
 (struct ticker (symbol description exchange))
@@ -28,7 +29,9 @@
 (define convert-csv-line-to-ticker
   (lambda (csv-line)
     (let ([iterator (make-list-iterator csv-line)])
-      (ticker (iterator 1) (iterator) (convert-to-exchange (iterator))))))
+      (ticker (string->symbol (iterator 1))
+              (iterator)
+              (convert-to-exchange (iterator))))))
 
 (define passive-regex #rx#"\\((.*),(.*),(.*),(.*),(.*),(.*)\\)")
 
@@ -88,6 +91,4 @@
           convert-csv-line-to-ticker
           (ticker-csv-reader-maker
             (ftp-download tcpin tcpout "nasdaqtraded.txt")))))))
-
-(get-tickers)
 
