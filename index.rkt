@@ -1,8 +1,7 @@
 #lang racket
 
-(provide handler)
-
 (require date)
+(require racket-lambda-runtime)
 
 (require "./lib/get-tickers.rkt")
 (require "./lib/tickers-seen.rkt")
@@ -38,4 +37,6 @@
                   (hasheq 'date-created utc-timestamp))))))
         (get-tickers))
       (update-seen-tickers tickers-seen))))
+
+(set-handler handler)
 
