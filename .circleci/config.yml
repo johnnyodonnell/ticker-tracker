@@ -9,3 +9,8 @@ jobs:
             - run: zip lambda.zip bootstrap
             - run: aws lambda update-function-code --function-name ticker-tracker --zip-file fileb://lambda.zip
 
+workflow:
+    build:
+        jobs:
+            - build
+
