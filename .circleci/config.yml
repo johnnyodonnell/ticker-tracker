@@ -5,6 +5,7 @@ jobs:
             - image: kingod180/racket-aws:latest
         steps:
             - checkout
+            - run: raco pkg install --auto --no-setup
             - run: raco exe --orig-exe -o bootstrap index.rkt
             - run: zip lambda.zip bootstrap
             - run: aws lambda update-function-code --function-name ticker-tracker --zip-file fileb://lambda.zip
